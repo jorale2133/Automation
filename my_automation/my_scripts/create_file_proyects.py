@@ -1,82 +1,78 @@
-###Create Files
-
-import os as system
+import os
+import sys
+import subprocess
 import tkinter as tk    
 from tkinter import filedialog
 import openpyxl
 
-# Create a GUI window
+# --- 1. CONFIGURACIÓN INICIAL ---
 root = tk.Tk()
-root.withdraw()  # Hide the root window
-# Ask the user to select a directory
-directory = filedialog.askdirectory(title="Select a directory to create files")
+root.withdraw() 
+directory = filedialog.askdirectory(title="Selecciona la carpeta raíz del Proyecto")
+
 if not directory:
-    print("No directory selected. Exiting.")
     exit()
-# List of directories to create
-main_files = ['0_managment', '1_docs', '2_implementation', '3_resources', '4_results']
-for file in main_files:
-    file_path = system.path.join(directory, file)
-    if not system.path.exists(file_path):
-        system.mkdir(file_path)
-        print(f"Directory '{file}' created.")
-    else:
-        print(f"Directory '{file}' already exists.")
-# Cretae subdirectories in '0_managment'
-workbook = openpyxl.Workbook()
-workbook.save(system.path.join(directory, '0_managment', 'Schedule.xlsx'))# Create an empty Excel file
-sub_files = ['ProyectPlan.docx', 'Material and budget.docx', 'Tasks.docx']
-sub_directory = system.path.join(directory, '0_managment')
-for file in sub_files:
-    file_path = system.path.join(sub_directory, file)
-    if not system.path.exists(file_path):
-        with open(file_path, 'w') as f:
-            f.write("")  # Create an empty file
-        print(f"File '{file}' created in '0_managment'.")
-    else:
-        print(f"File '{file}' already exists in '0_managment'.")
 
+project_name = os.path.basename(directory).lower().replace(" ", "-")
 
-# Create subdirectories in '1_docs'
-sub_files_docs = ['Report.docx', 'Documentation.docx']
-sub_directory_docs = system.path.join(directory, '1_docs')  
-for file in sub_files_docs:
-    file_path = system.path.join(sub_directory_docs, file)
-    if not system.path.exists(file_path):
-        with open(file_path, 'w') as f:
-            f.write("")  # Create an empty file
-        print(f"File '{file}' created in '1_docs'.")
-    else:
-        print(f"File '{file}' already exists in '1_docs'.")
-# Create subdirectories in '2_implementations'
-sub_files_impl = ['Software', 'Hardware', 'Simulations']
-sub_directory_impl = system.path.join(directory, '2_implementation')
-for file in sub_files_impl: 
-    file_path = system.path.join(sub_directory_impl, file)
-    if not system.path.exists(file_path):
-        system.mkdir(file_path)
-        print(f"Directory '{file}' created in '2_implementation'.")
-    else:
-        print(f"Directory '{file}' already exists in '2_implementation'.")
-# Create subdirectories in '3_resources'
-sub_files_res = ['Images', 'Diagrams', 'Data', 'References Materials']
-sub_directory_res = system.path.join(directory, '3_resources')
-for file in sub_files_res:
-    file_path = system.path.join(sub_directory_res, file)
-    if not system.path.exists(file_path):
-        system.mkdir(file_path)
-        print(f"Directory '{file}' created in '3_resources'.")
-    else:
-        print(f"Directory '{file}' already exists in '3_resources'.")
-# Create subdirectories in '4_results'
-sub_files_resu = ['Results', 'Analysis', 'Conclusions']
-sub_directory_resu = system.path.join(directory, '4_results')
-for file in sub_files_resu:
-    file_path = system.path.join(sub_directory_resu, file)
-    if not system.path.exists(file_path):
-        system.mkdir(file_path)
-        print(f"Directory '{file}' created in '4_results'.")
-    else:
-        print(f"Directory '{file}' already exists in '4_results'.")
-# End of the script
-print("All directories and files have been created successfully.")
+# --- 2. CREACIÓN DE ESTRUCTURA COMPLETA ---
+main_folders = ['docs-tecnica', 'recursos-media', 'negocio-legal', 'development']
+for folder in main_folders:
+    os.makedirs(os.path.join(directory, folder), exist_ok=True)
+
+dev_path = os.path.join(directory, 'development')
+publicas = ['frontend-react'] 
+privadas = ['backend-fastapi', 'mobile-react-native', 'unity-sim-csharp', 'science-julia', 'hardware-vhdl', 'firmware-micros']
+
+for sub in (publicas + privadas):
+    path = os.path.join(dev_path, sub)
+    os.makedirs(path, exist_ok=True)
+    
+    # LÓGICA EXCLUSIVA PARA EL BACKEND (.env y .venv)
+    if sub == 'backend-fastapi':
+        # Archivo .env solo en backend
+        with open(os.path.join(path, ".env"), "w") as f:
+            f.write("# Configuración del Backend\nSECRET_KEY=tu_token_aqui\nDEBUG=True\n")
+        
+        # Entorno virtual solo en backend
+        print(f"📦 Creando venv exclusivo en {sub}...")
+        subprocess.run([sys.executable, "-m", "venv", os.path.join(path, ".venv")], check=True)
+
+# --- 3. ARCHIVOS DE APOYO ADICIONALES ---
+with open(os.path.join(directory, 'README.md'), 'w', encoding='utf-8') as f:
+    f.write(f"# {project_name.upper()}\nProyecto de Ingeniería Automatizado.")
+
+wb = openpyxl.Workbook()
+wb.save(os.path.join(directory, 'Master_Engineering_Schedule.xlsx'))
+
+# --- 4. FUNCIÓN DE GESTIÓN DE REPOS ---
+def configurar_y_subir_repo(folder_path, repo_suffix, is_private):
+    if not os.path.exists(folder_path): return
+    os.chdir(folder_path)
+    repo_name = f"{project_name}-{repo_suffix}"
+    
+    subprocess.run(["git", "init"], capture_output=True)
+    with open(".gitignore", "w") as f:
+        f.write("**/.venv/\n**/node_modules/\n**/__pycache__/\n.env\nbuild/\n*.xlsx\n")
+    
+    privacy = "--private" if is_private else "--public"
+    try:
+        subprocess.run(["gh", "repo", "create", repo_name, privacy, "--source=.", "--remote=origin"], check=True)
+        
+        subprocess.run(["git", "add", "."], capture_output=True)
+        subprocess.run(["git", "commit", "-m", "Initial commit: Ecosistema con venv solo en backend"], capture_output=True)
+        subprocess.run(["git", "branch", "-M", "main"], capture_output=True)
+        subprocess.run(["git", "push", "-u", "origin", "main"], capture_output=True)
+        
+        print(f"✅ Repo '{repo_name}' configurado y subido.")
+    except:
+        print(f"⚠️ El repo '{repo_name}' ya existe o hubo un error.")
+
+# A. REPO PRIVADO (Todo el proyecto)
+configurar_y_subir_repo(directory, "core-private", True)
+
+# B. REPO PÚBLICO (Solo Frontend)
+frontend_path = os.path.join(dev_path, 'frontend-react')
+configurar_y_subir_repo(frontend_path, "frontend-public", False)
+
+print(f"\n🚀 PROYECTO LISTO: Entorno virtual y .env creados ÚNICAMENTE en 'backend-fastapi'.")
