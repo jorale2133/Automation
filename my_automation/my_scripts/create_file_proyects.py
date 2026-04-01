@@ -15,17 +15,27 @@ if not directory:
 
 project_name = os.path.basename(directory).lower().replace(" ", "-")
 
+
 # --- 2. CREACIÓN DE ESTRUCTURA COMPLETA ---
 main_folders = ['docs-tecnica', 'recursos-media', 'negocio-legal', 'development']
 for folder in main_folders:
     os.makedirs(os.path.join(directory, folder), exist_ok=True)
 
 dev_path = os.path.join(directory, 'development')
-publicas = ['frontend-react'] 
-privadas = ['backend-fastapi', 'mobile-react-native', 'unity-sim-csharp', 'science-julia', 'hardware-vhdl', 'firmware-micros']
+folders = ['privadas', 'publicas']
 
-for sub in (publicas + privadas):
-    path = os.path.join(dev_path, sub)
+for sub in folders:
+    path= os.path.join(dev_path, sub)
+    os.makedirs(path, exist_ok=True)
+
+dev_private = os.path.join(dev_path, 'privadas')
+dev_public = os.path.join(dev_path, 'publicas')
+
+privadas = ['backend-fastapi', 'mobile-react-native', 'unity-sim-csharp', 'hardware-vhdl', 'firmware-micros']
+publicas = ['frontend-react'] 
+
+for sub in (privadas):
+    path = os.path.join(dev_private, sub)
     os.makedirs(path, exist_ok=True)
     
     # LÓGICA EXCLUSIVA PARA EL BACKEND (.env y .venv)
@@ -38,12 +48,20 @@ for sub in (publicas + privadas):
         print(f"📦 Creando venv exclusivo en {sub}...")
         subprocess.run([sys.executable, "-m", "venv", os.path.join(path, ".venv")], check=True)
 
+###Ceración e carpeta públicas
+for sub in (publicas):
+    path = os.path.join(dev_public, sub)
+    os.makedirs(path, exist_ok=True)
+
+
 # --- 3. ARCHIVOS DE APOYO ADICIONALES ---
 with open(os.path.join(directory, 'README.md'), 'w', encoding='utf-8') as f:
-    f.write(f"# {project_name.upper()}\nProyecto de Ingeniería Automatizado.")
+    f.write(f"# {project_name.upper()}\nProyecto creado...")
 
 wb = openpyxl.Workbook()
 wb.save(os.path.join(directory, 'Master_Engineering_Schedule.xlsx'))
+
+"""
 
 # --- 4. FUNCIÓN DE GESTIÓN DE REPOS ---
 def configurar_y_subir_repo(folder_path, repo_suffix, is_private):
@@ -76,3 +94,4 @@ frontend_path = os.path.join(dev_path, 'frontend-react')
 configurar_y_subir_repo(frontend_path, "frontend-public", False)
 
 print(f"\n🚀 PROYECTO LISTO: Entorno virtual y .env creados ÚNICAMENTE en 'backend-fastapi'.")
+"""
